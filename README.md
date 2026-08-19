@@ -1,585 +1,593 @@
-# 🔥 Smart Kitchen Safety Monitoring System
+# 🍳🔥 Kitchen Safety Monitoring System
 
-> 🚨 **An Arduino-based kitchen safety system that detects gas leakage, fire, and high temperature — then automatically alerts the user and activates the exhaust fan when required.**
+<p align="center">
 
-![Arduino](https://img.shields.io/badge/Arduino-Uno-blue?style=for-the-badge\&logo=arduino)
-![C++](https://img.shields.io/badge/Language-C%2B%2B-orange?style=for-the-badge\&logo=cplusplus)
-![Sensors](https://img.shields.io/badge/Sensors-3-green?style=for-the-badge)
-![LCD](https://img.shields.io/badge/Display-16x2-purple?style=for-the-badge)
-![Safety](https://img.shields.io/badge/Application-Kitchen%20Safety-red?style=for-the-badge)
+### 🛡️ Arduino-Based Smart Kitchen Safety System
 
----
+**Gas Leak Detection • Fire Detection • Temperature Monitoring • Automatic Fan • Buzzer Alert**
 
-## 🎬 Project Overview
+<br>
 
-This project continuously monitors a kitchen using:
+![Arduino](https://img.shields.io/badge/Arduino-UNO-00979D?style=for-the-badge\&logo=arduino\&logoColor=white)
+![C++](https://img.shields.io/badge/Language-C%2B%2B-blue?style=for-the-badge\&logo=cplusplus)
+![LCD](https://img.shields.io/badge/LCD-16x2-green?style=for-the-badge)
+![Sensors](https://img.shields.io/badge/Sensors-3-orange?style=for-the-badge)
+![Safety](https://img.shields.io/badge/Safety-System-red?style=for-the-badge)
 
-* 🟠 **Gas Sensor** — detects possible gas leakage
-* 🔥 **Fire Sensor** — detects fire/flame conditions
-* 🌡️ **DHT11** — measures temperature
-* 📟 **16×2 LCD** — displays the current safety status
-* 🔴 **Red LED** — indicates danger
-* 🟢 **Green LED** — indicates safe conditions
-* 🔊 **Buzzer** — provides an audible alarm
-* 🌀 **Fan** — automatically turns ON during gas leakage or high temperature
-
-### ✨ Basic Operation
-
-```text
-             ┌─────────────────────┐
-             │     POWER ON ⚡      │
-             └──────────┬──────────┘
-                        │
-                        ▼
-             ┌─────────────────────┐
-             │  Read All Sensors   │
-             │ 🌡️  🔥  🟠          │
-             └──────────┬──────────┘
-                        │
-                        ▼
-                ┌───────────────┐
-                │  Gas ≥ 60 ?   │
-                └───────┬───────┘
-                    YES │   │ NO
-                        │   ▼
-                        │ ┌───────────────┐
-                        │ │  Fire ≥ 50 ?  │
-                        │ └───────┬───────┘
-                        │     YES │   │ NO
-                        │         │   ▼
-                        │         │ ┌────────────────┐
-                        │         │ │ Temp ≥ 50°C ?  │
-                        │         │ └───────┬────────┘
-                        │         │     YES │   │ NO
-                        ▼         ▼         ▼   ▼
-                     🚨 GAS     🔥 FIRE   🌡️ HIGH  🟢 SAFE
-                        │         │         │       │
-                        └────┬────┴────┬────┴───────┘
-                             │         │
-                             ▼         ▼
-                         LCD STATUS  OUTPUT CONTROL
-```
+</p>
 
 ---
 
-# 🧠 How the System Works
+# 🚨 Project Overview
 
-The Arduino reads the three sensors every **1 second**.
+This project is an **Arduino-based Kitchen Safety Monitoring System** designed to continuously monitor:
 
-The decision priority is:
+* 💨 Gas leakage
+* 🔥 Fire/flame conditions
+* 🌡️ Temperature
 
-```text
-🥇 GAS LEAK
-       ↓
-🥈 FIRE
-       ↓
-🥉 HIGH TEMPERATURE
-       ↓
-🟢 SAFE
-```
+When a dangerous condition is detected, the system automatically activates the appropriate safety devices:
 
-This means if multiple dangerous conditions occur simultaneously, **gas leakage gets the highest priority**.
+* 🔴 Red LED → Warning
+* 🟢 Green LED → Safe condition
+* 🔊 Buzzer → Alarm
+* 🌀 Fan → Ventilation
+* 📟 16×2 LCD → Displays system status
 
 ---
 
-# 🔄 Animated Decision Flow
+# ✨ System Animation
 
-The following Mermaid diagram shows the complete decision process.
-
-```mermaid
-flowchart TD
-    A([⚡ SYSTEM START]) --> B[📟 Initialize LCD]
-    B --> C[🔌 Configure Pins]
-    C --> D[⏳ Startup Message]
-    D --> E[🔄 Read Sensors]
-
-    E --> F[🟠 Read Gas Sensor]
-    F --> G[🔥 Read Fire Sensor]
-    G --> H[🌡️ Read DHT11]
-    
-    H --> I{🟠 GAS >= 60?}
-
-    I -->|YES 🚨| J[🔴 RED LED ON]
-    J --> K[🌀 FAN ON]
-    K --> L[🔊 BUZZER ON]
-    L --> M[📟 Display GAS LEAK]
-    
-    I -->|NO| N{🔥 FIRE >= 50?}
-
-    N -->|YES 🔥| O[🔴 RED LED ON]
-    O --> P[🔊 BUZZER ON]
-    P --> Q[📟 Display FIRE ALERT]
-
-    N -->|NO| R{🌡️ TEMP >= 50°C?}
-
-    R -->|YES 🌡️| S[🔴 RED LED ON]
-    S --> T[🌀 FAN ON]
-    T --> U[🔇 BUZZER OFF]
-    U --> V[📟 Display HIGH TEMP]
-
-    R -->|NO 🟢| W[🟢 GREEN LED ON]
-    W --> X[🌀 FAN OFF]
-    X --> Y[🔇 BUZZER OFF]
-    Y --> Z[📟 Display KITCHEN SAFE]
-
-    M --> AA[⏱️ Wait 1 Second]
-    Q --> AA
-    V --> AA
-    Z --> AA
-
-    AA --> E
-```
-
----
-
-# 🎯 Sensor Threshold Animation
-
-```mermaid
-graph LR
-    A["🟢 0%"] --> B["🟢 Normal"]
-    B --> C["🟡 Warning"]
-    C --> D["🔴 GAS ≥ 60%"]
-    D --> E["🚨 ALARM"]
-
-    F["🟢 0%"] --> G["🟢 Normal"]
-    G --> H["🟡 Monitoring"]
-    H --> I["🔴 FIRE ≥ 50%"]
-    I --> J["🔥 ALARM"]
-
-    K["🌡️ < 50°C"] --> L["🟢 Normal"]
-    L --> M["🔴 ≥ 50°C"]
-    M --> N["🌀 FAN ON"]
-```
-
----
-
-# 📊 System States
-
-| Condition       | Red LED 🔴 | Green LED 🟢 | Buzzer 🔊 | Fan 🌀 | LCD          |
-| --------------- | ---------: | -----------: | --------: | -----: | ------------ |
-| 🟢 Safe         |        OFF |           ON |       OFF |    OFF | Kitchen Safe |
-| 🚨 Gas ≥ 60     |         ON |          OFF |        ON |     ON | GAS LEAK     |
-| 🔥 Fire ≥ 50    |         ON |          OFF |        ON |   OFF* | FIRE ALERT   |
-| 🌡️ Temp ≥ 50°C |         ON |          OFF |       OFF |     ON | TEMP HIGH    |
-
-> **Note:** In the current code, the fan is explicitly turned ON for gas leakage and high temperature. During the fire-alert branch, the fan is not changed, so it retains its previous state.
-
----
-
-# 🧩 Hardware Architecture
+The complete working process can be visualized like this:
 
 ```mermaid
 flowchart LR
+    A["🔌 POWER ON"] --> B["📟 LCD STARTUP"]
+    B --> C["🔍 READ SENSORS"]
 
-    GAS["🟠 Gas Sensor<br/>A0"]
-    FIRE["🔥 Fire Sensor<br/>A1"]
-    DHT["🌡️ DHT11<br/>D3"]
+    C --> D["💨 GAS SENSOR"]
+    C --> E["🔥 FIRE SENSOR"]
+    C --> F["🌡️ DHT11"]
 
-    ARDUINO["🧠 Arduino UNO"]
+    D --> G{"Gas ≥ 60%?"}
+    E --> H{"Fire ≥ 50%?"}
+    F --> I{"Temperature ≥ 50°C?"}
 
-    LCD["📟 16×2 LCD"]
-    RED["🔴 Red LED"]
-    GREEN["🟢 Green LED"]
-    BUZZER["🔊 Buzzer"]
-    FAN["🌀 Fan"]
+    G -- "YES 🚨" --> J["🔴 RED LED"]
+    J --> K["🔊 BUZZER"]
+    K --> L["🌀 FAN ON"]
 
-    GAS --> ARDUINO
-    FIRE --> ARDUINO
-    DHT --> ARDUINO
+    G -- "NO" --> H
 
-    ARDUINO --> LCD
-    ARDUINO --> RED
-    ARDUINO --> GREEN
-    ARDUINO --> BUZZER
-    ARDUINO --> FAN
+    H -- "YES 🚨" --> M["🔴 RED LED"]
+    M --> N["🔊 BUZZER"]
+
+    H -- "NO" --> I
+
+    I -- "YES ⚠️" --> O["🔴 RED LED"]
+    O --> P["🌀 FAN ON"]
+
+    I -- "NO ✅" --> Q["🟢 GREEN LED"]
+    Q --> R["😊 KITCHEN SAFE"]
+
+    L --> S["📟 UPDATE LCD"]
+    N --> S
+    P --> S
+    R --> S
+
+    S --> T["⏱️ WAIT 1 SECOND"]
+    T --> C
+```
+
+> 🔄 **The system continuously repeats this monitoring cycle.**
+
+---
+
+# 🎬 Sensor Monitoring Animation
+
+```mermaid
+sequenceDiagram
+    participant A as 🤖 Arduino
+    participant G as 💨 Gas Sensor
+    participant F as 🔥 Fire Sensor
+    participant D as 🌡️ DHT11
+    participant L as 📟 LCD
+    participant B as 🔊 Buzzer
+    participant V as 🌀 Fan
+
+    A->>G: Read analog value
+    G-->>A: Gas ADC
+
+    A->>F: Read analog value
+    F-->>A: Fire ADC
+
+    A->>D: Read temperature
+    D-->>A: Temperature °C
+
+    A->>A: Convert sensor values
+    A->>A: Check safety thresholds
+
+    alt Gas ≥ 60%
+        A->>L: GAS LEAK OP WIN
+        A->>B: 🔊 Alarm ON
+        A->>V: 🌀 Fan ON
+    else Fire ≥ 50%
+        A->>L: FIRE ALERT!
+        A->>B: 🔊 Alarm ON
+    else Temperature ≥ 50°C
+        A->>L: TEMP HIGH OP WIN
+        A->>V: 🌀 Fan ON
+    else Everything Safe
+        A->>L: Kitchen Safe
+        A->>B: Alarm OFF
+        A->>V: Fan OFF
+    end
+```
+
+---
+
+# 🧠 How The Program Works
+
+The Arduino performs four major operations:
+
+```text
+┌──────────────────────────────────────────────┐
+│              🍳 KITCHEN MONITOR              │
+├──────────────────────────────────────────────┤
+│                                              │
+│   💨 GAS SENSOR ───────┐                    │
+│                        │                    │
+│   🔥 FIRE SENSOR ──────┼──► 🤖 ARDUINO      │
+│                        │                    │
+│   🌡️ DHT11 ────────────┘                    │
+│                                              │
+│                 │                            │
+│                 ▼                            │
+│          🧠 DECISION LOGIC                  │
+│                 │                            │
+│       ┌─────────┼─────────┐                 │
+│       ▼         ▼         ▼                 │
+│     🔊 ALARM   🌀 FAN    💡 LED             │
+│                                              │
+│                 │                            │
+│                 ▼                            │
+│             📟 LCD DISPLAY                  │
+│                                              │
+└──────────────────────────────────────────────┘
 ```
 
 ---
 
 # 🔌 Pin Configuration
 
-| Component      | Arduino Pin |
-| -------------- | ----------- |
-| 🟠 Gas Sensor  | A0          |
-| 🔥 Fire Sensor | A1          |
-| 🌡️ DHT11      | D3          |
-| 🔴 Red LED     | D6          |
-| 🟢 Green LED   | D5          |
-| 🔊 Buzzer      | D2          |
-| 🌀 Fan         | D4          |
-| 📟 LCD RS      | D13         |
-| 📟 LCD EN      | D12         |
-| 📟 LCD D4      | D11         |
-| 📟 LCD D5      | D10         |
-| 📟 LCD D6      | D9          |
-| 📟 LCD D7      | D8          |
+| Component      | Arduino Pin | Purpose         |
+| -------------- | ----------: | --------------- |
+| 📟 LCD RS      |         D13 | Register Select |
+| 📟 LCD EN      |         D12 | Enable          |
+| 📟 LCD D4      |         D11 | LCD Data        |
+| 📟 LCD D5      |         D10 | LCD Data        |
+| 📟 LCD D6      |          D9 | LCD Data        |
+| 📟 LCD D7      |          D8 | LCD Data        |
+| 💨 Gas Sensor  |          A0 | Gas level       |
+| 🔥 Fire Sensor |          A1 | Fire level      |
+| 🌡️ DHT11      |          D3 | Temperature     |
+| 🔴 Red LED     |          D6 | Warning         |
+| 🟢 Green LED   |          D5 | Safe            |
+| 🔊 Buzzer      |          D2 | Alarm           |
+| 🌀 Fan         |          D4 | Ventilation     |
 
 ---
 
-# 🧮 Gas Sensor Conversion
+# 📊 Sensor Data Flow
 
-The analog gas sensor produces a value between:
+```mermaid
+flowchart TD
+    A["💨 Gas Sensor<br/>A0"] --> B["analogRead()"]
+    B --> C["Gas ADC<br/>0 - 1023"]
+    C --> D["map()"]
+    D --> E["Gas %<br/>0 - 100"]
 
-```text
-0 ─────────────────────────────── 1023
-              ↓
-        Arduino ADC value
+    F["🔥 Fire Sensor<br/>A1"] --> G["analogRead()"]
+    G --> H["Fire ADC<br/>0 - 1023"]
+    H --> I["map()"]
+    I --> J["Fire %<br/>0 - 100"]
+
+    K["🌡️ DHT11<br/>D3"] --> L["readTemperature()"]
+    L --> M["Temperature °C"]
+
+    E --> N["🧠 Decision System"]
+    J --> N
+    M --> N
 ```
 
-The code converts this into a percentage-like value:
+---
+
+# 💨 Gas Leak Detection
+
+The gas sensor is connected to **A0**.
+
+The program reads the analog value:
+
+```cpp
+int gasADC = analogRead(GAS_SENSOR);
+```
+
+Then converts it to a percentage:
 
 ```cpp
 int GAS = map(gasADC, 0, 1023, 0, 100);
 ```
 
-So:
+### 🚨 Gas Decision
 
-```text
-ADC 0     → 0%
-ADC 512   → ~50%
-ADC 1023  → 100%
+```mermaid
+flowchart LR
+    A["💨 Gas Sensor"] --> B["Gas %"]
+    B --> C{"GAS ≥ 60?"}
+
+    C -- "YES 🚨" --> D["🔴 RED ON"]
+    D --> E["🔊 BUZZER ON"]
+    E --> F["🌀 FAN ON"]
+    F --> G["📟 GAS LEAK ALERT"]
+
+    C -- "NO ✅" --> H["Continue"]
 ```
 
-The alarm threshold is:
-
-```cpp
-if (GAS >= 60)
-```
-
-Therefore:
+### Gas Threshold
 
 ```text
-       GAS LEVEL
+Gas Level
 
-0% ─────────────── 59% ┃ 60% ───────── 100%
-🟢 SAFE                 ┃ 🔴 DANGER
-                        ↑
-                   Alarm starts
+0% ─────────────── 59% ─── 60% ─────────── 100%
+🟢 SAFE                    🚨 DANGER
+                            ▲
+                            │
+                       ALERT STARTS
 ```
 
 ---
 
 # 🔥 Fire Detection
 
-The fire sensor is also converted into a 0–100 range:
+The fire sensor is connected to **A1**.
+
+```cpp
+int fireADC = analogRead(FIRE);
+```
+
+The value is converted to a percentage:
 
 ```cpp
 int fire = map(fireADC, 0, 1023, 0, 100);
 ```
 
-The fire alarm condition is:
+If the fire level reaches **50% or more**, the system enters fire-alert mode.
 
-```cpp
-else if (fire >= 50)
-```
+```mermaid
+stateDiagram-v2
+    [*] --> Monitoring
 
-Therefore:
+    Monitoring --> FireAlert: Fire ≥ 50%
+    FireAlert --> Monitoring: Fire < 50%
 
-```text
-0% ───────────────── 49% ┃ 50% ───────── 100%
-🟢 NORMAL                ┃ 🔥 FIRE ALERT
-                         ↑
-                    Alarm starts
+    FireAlert: 🔴 Red LED ON
+    FireAlert: 🔊 Buzzer ON
+    FireAlert: 📟 FIRE ALERT!
+
+    Monitoring: 🟢 Green LED
+    Monitoring: 📟 Monitoring
 ```
 
 ---
 
-# 🌡️ Temperature Detection
+# 🌡️ Temperature Monitoring
 
-The DHT11 temperature is read using:
+The DHT11 is connected to **D3**.
 
 ```cpp
 int temperature = dht11.readTemperature();
 ```
 
-The high-temperature threshold is:
+The temperature threshold is:
 
 ```cpp
-else if (temperature >= 50)
+temperature >= 50
 ```
 
-Visual representation:
+### Temperature Animation
 
-```text
-🌡️ TEMPERATURE
+```mermaid
+flowchart LR
+    A["🌡️ DHT11"] --> B["Read Temperature"]
+    B --> C{"Temperature ≥ 50°C?"}
 
-20°C       30°C       40°C       50°C
- |----------|----------|----------|
- 🟢 NORMAL                       🔴 HIGH
-                                  ↓
-                             🌀 FAN ON
-```
-
----
-
-# 📟 LCD Animation
-
-## 🟢 Safe Mode
-
-```text
-┌────────────────┐
-│ Kitchen Safe   │
-│ G:25 F:12 T:30 │
-└────────────────┘
-```
-
-The LCD continuously displays:
-
-* 🟠 Gas percentage
-* 🔥 Fire percentage
-* 🌡️ Temperature
-
----
-
-## 🚨 Gas Leak Mode
-
-```text
-┌────────────────┐
-│ GAS LEAK OP WIN│
-│ G:75    T:32   │
-└────────────────┘
-```
-
-The system:
-
-```text
-🟠 GAS DETECTED
-       ↓
-🔴 RED LED ON
-       ↓
-🔊 BUZZER ON
-       ↓
-🌀 FAN ON
-       ↓
-📟 LCD WARNING
+    C -- "NO ✅" --> D["🟢 SAFE"]
+    C -- "YES ⚠️" --> E["🔴 RED LED"]
+    E --> F["🌀 FAN ON"]
+    F --> G["📟 TEMP HIGH"]
 ```
 
 ---
 
-## 🔥 Fire Alert Mode
+# 🚦 Complete Decision Priority
 
-```text
-┌────────────────┐
-│ FIRE ALERT!    │
-│ F:72    T:48   │
-└────────────────┘
+The program checks conditions in this exact order:
+
+```mermaid
+flowchart TD
+    A["🔄 loop()"] --> B["Read Sensors"]
+
+    B --> C{"💨 GAS ≥ 60?"}
+
+    C -- YES --> D["🚨 GAS LEAK"]
+    C -- NO --> E{"🔥 FIRE ≥ 50?"}
+
+    E -- YES --> F["🔥 FIRE ALERT"]
+    E -- NO --> G{"🌡️ TEMP ≥ 50°C?"}
+
+    G -- YES --> H["⚠️ HIGH TEMPERATURE"]
+    G -- NO --> I["✅ KITCHEN SAFE"]
+
+    D --> J["📟 LCD + Outputs"]
+    F --> J
+    H --> J
+    I --> J
+
+    J --> K["⏱️ delay(1000)"]
+    K --> A
 ```
 
-The system:
+### ⚠️ Important
+
+Because the conditions use:
+
+```cpp
+if
+else if
+else if
+else
+```
+
+only **one condition is selected per loop**.
+
+The priority is:
 
 ```text
-🔥 FIRE DETECTED
-       ↓
-🔴 RED LED ON
-       ↓
-🔊 BUZZER ON
-       ↓
-📟 FIRE ALERT
+🥇 GAS LEAK
+     ↓
+🥈 FIRE
+     ↓
+🥉 HIGH TEMPERATURE
+     ↓
+🏅 SAFE
 ```
+
+So if both gas and fire are detected, the **gas-leak branch executes first**.
 
 ---
 
-## 🌡️ High Temperature Mode
+# 💡 LED Status Animation
 
-```text
-┌────────────────┐
-│ TEMP HIGH OP WIN│
-│ T:55°C         │
-└────────────────┘
+```mermaid
+flowchart LR
+    A["System"] --> B{"Danger?"}
+
+    B -- "NO" --> C["🟢 GREEN LED"]
+    B -- "YES" --> D["🔴 RED LED"]
+
+    C --> E["😊 SAFE"]
+    D --> F["🚨 WARNING"]
 ```
 
-The system:
-
-```text
-🌡️ TEMP ≥ 50°C
-       ↓
-🔴 RED LED ON
-       ↓
-🌀 FAN ON
-       ↓
-🔇 BUZZER OFF
-       ↓
-📟 HIGH TEMP
-```
+| Condition        | 🔴 Red | 🟢 Green |
+| ---------------- | ------ | -------- |
+| Safe             | OFF    | ON       |
+| Gas Leak         | ON     | OFF      |
+| Fire             | ON     | OFF      |
+| High Temperature | ON     | OFF      |
 
 ---
 
-# 🔊 Buzzer Animation
+# 🔊 Buzzer Logic
 
-When gas leakage or fire is detected:
+```mermaid
+flowchart TD
+    A["Sensor Check"] --> B{"Gas ≥ 60?"}
 
-```text
-        🚨
-        │
-        ▼
-   ┌──────────┐
-   │ BUZZER   │
-   │   🔊     │
-   └────┬─────┘
-        │
-        ▼
-   tone(1000)
+    B -- YES --> C["🔊 tone(BUZZER,1000)"]
+    B -- NO --> D{"Fire ≥ 50?"}
+
+    D -- YES --> C
+    D -- NO --> E{"Temperature ≥ 50?"}
+
+    E -- YES --> F["🔇 Buzzer OFF"]
+    E -- NO --> F
 ```
 
-The code uses:
+### Alarm Frequency
 
 ```cpp
 tone(BUZZER,1000);
 ```
 
-The buzzer is stopped using:
-
-```cpp
-noTone(BUZZER);
-```
+This generates a **1000 Hz tone** on the buzzer.
 
 ---
 
 # 🌀 Automatic Fan Control
 
+The fan provides ventilation during dangerous gas or high-temperature conditions.
+
+```mermaid
+stateDiagram-v2
+    [*] --> Safe
+
+    Safe --> GasDanger: Gas ≥ 60%
+    Safe --> TemperatureDanger: Temperature ≥ 50°C
+
+    GasDanger --> FanOn
+    TemperatureDanger --> FanOn
+
+    FanOn: 🌀 FAN ON
+
+    Safe: 🟢 FAN OFF
+```
+
+---
+
+# 📟 LCD Display Animation
+
+## Startup
+
+When the Arduino starts:
+
+```text
+┌────────────────┐
+│Kitchen Monitor │
+│  System        │
+└────────────────┘
+        ↓
+      2 sec
+        ↓
+┌────────────────┐
+│                │
+│   Monitoring   │
+└────────────────┘
+```
+
+---
+
+## Normal Mode
+
+```text
+┌────────────────┐
+│ Kitchen Safe   │
+│ G:25 F:10 T:32°C│
+└────────────────┘
+```
+
+---
+
+## Gas Leak
+
+```text
+┌────────────────┐
+│GAS LEAK OP WIN │
+│G:75     T:45   │
+└────────────────┘
+
+      🚨
+      ↓
+   🔴 RED
+   🔊 BUZZER
+   🌀 FAN
+```
+
+---
+
+## Fire Alert
+
+```text
+┌────────────────┐
+│ FIRE ALERT!    │
+│ F:72     T:41  │
+└────────────────┘
+
+      🔥
+      ↓
+   🔴 RED
+   🔊 BUZZER
+```
+
+---
+
+## High Temperature
+
+```text
+┌────────────────┐
+│TEMP HIGH OP WIN│
+│T:55°C          │
+└────────────────┘
+
+      🌡️
+      ↓
+   🔴 RED
+   🌀 FAN
+```
+
+---
+
+# 🔄 Main Loop Animation
+
+Every approximately **1 second**, the Arduino repeats:
+
+```text
+        ┌───────────────┐
+        │   🔄 START    │
+        └───────┬───────┘
+                ↓
+        ┌───────────────┐
+        │ Read DHT11    │
+        │ 🌡️ Temperature│
+        └───────┬───────┘
+                ↓
+        ┌───────────────┐
+        │ Read Gas A0   │
+        │ 💨            │
+        └───────┬───────┘
+                ↓
+        ┌───────────────┐
+        │ Read Fire A1  │
+        │ 🔥            │
+        └───────┬───────┘
+                ↓
+        ┌───────────────┐
+        │ 🧠 DECISION   │
+        └───────┬───────┘
+                ↓
+       ┌────────┼────────┐
+       ↓        ↓        ↓
+     💨 GAS   🔥 FIRE   🌡️ TEMP
+       │        │        │
+       └────────┼────────┘
+                ↓
+        ┌───────────────┐
+        │ 📟 LCD UPDATE │
+        └───────┬───────┘
+                ↓
+        ┌───────────────┐
+        │ ⏱️ 1 SECOND   │
+        └───────┬───────┘
+                │
+                └──────────────► 🔄 REPEAT
+```
+
+---
+
+# 🧩 Code Structure
+
+The program can be divided into these sections:
+
 ```mermaid
 flowchart TD
-    A[Sensor Reading] --> B{Gas ≥ 60?}
-    B -->|YES| C[🌀 FAN ON]
-    B -->|NO| D{Temperature ≥ 50°C?}
-    D -->|YES| C
-    D -->|NO| E[🌀 FAN OFF]
-```
+    A["📚 Libraries"] --> B["📌 Pin Definitions"]
+    B --> C["⚙️ setup()"]
+    C --> D["🔄 loop()"]
 
-The fan is controlled using:
-
-```cpp
-digitalWrite(FAN, HIGH);
-```
-
-and:
-
-```cpp
-digitalWrite(FAN, LOW);
+    D --> E["📥 Read Sensors"]
+    E --> F["📊 Convert Values"]
+    F --> G["🧠 Check Conditions"]
+    G --> H["💡 Control Outputs"]
+    H --> I["📟 Update LCD"]
+    I --> J["⏱️ Delay"]
+    J --> D
 ```
 
 ---
 
-# 💡 LED Status System
+# 📚 Libraries
 
-```text
-          SYSTEM STATUS
-                │
-        ┌───────┴───────┐
-        │               │
-      SAFE            DANGER
-        │               │
-        ▼               ▼
-   🟢 GREEN LED     🔴 RED LED
-        │               │
-        ▼               ▼
-   Normal State     Alarm State
-```
-
-Safe:
-
-```cpp
-digitalWrite(GREEN,HIGH);
-digitalWrite(RED,LOW);
-```
-
-Danger:
-
-```cpp
-digitalWrite(RED,HIGH);
-digitalWrite(GREEN,LOW);
-```
-
----
-
-# 🔄 Continuous Monitoring
-
-The entire system repeats every second:
-
-```text
-        ┌─────────────────┐
-        │   READ SENSORS  │
-        └────────┬────────┘
-                 ↓
-        ┌─────────────────┐
-        │ CHECK GAS       │
-        └────────┬────────┘
-                 ↓
-        ┌─────────────────┐
-        │ CHECK FIRE      │
-        └────────┬────────┘
-                 ↓
-        ┌─────────────────┐
-        │ CHECK TEMP      │
-        └────────┬────────┘
-                 ↓
-        ┌─────────────────┐
-        │ CONTROL OUTPUTS │
-        └────────┬────────┘
-                 ↓
-        ┌─────────────────┐
-        │ UPDATE LCD      │
-        └────────┬────────┘
-                 ↓
-             ⏱️ 1 SECOND
-                 │
-                 └──────────────↩
-```
-
-Implemented by:
-
-```cpp
-delay(1000);
-```
-
----
-
-# 🧠 Main Decision Logic
-
-The most important section of the program is:
-
-```cpp
-if (GAS >= 60)
-{
-    // Gas leak
-}
-else if (fire >= 50)
-{
-    // Fire
-}
-else if (temperature >= 50)
-{
-    // High temperature
-}
-else
-{
-    // Safe
-}
-```
-
-This creates a clear priority system:
-
-```text
-          ┌──────────────┐
-          │ GAS LEAK ?   │
-          └──────┬───────┘
-                 │
-          YES ───┴─── NO
-          ↓           ↓
-       🚨 GAS      🔥 FIRE ?
-                      │
-                 YES ─┴─ NO
-                 ↓       ↓
-              🔥 FIRE  🌡️ TEMP ?
-                          │
-                     YES ─┴─ NO
-                     ↓       ↓
-                  🌡️ HOT   🟢 SAFE
-```
-
----
-
-# 📦 Libraries Used
+The project uses:
 
 ```cpp
 #include <LiquidCrystal.h>
@@ -588,11 +596,203 @@ This creates a clear priority system:
 
 ### `LiquidCrystal`
 
-Used to control the 16×2 LCD.
+Controls the **16×2 LCD display**.
 
 ### `DHT11`
 
-Used to read temperature from the DHT11 sensor.
+Reads temperature from the **DHT11 temperature sensor**.
+
+---
+
+# ⚙️ Setup Function
+
+The `setup()` function runs **once** when the Arduino starts.
+
+It:
+
+1. Starts the LCD.
+2. Configures sensor pins.
+3. Configures LED, buzzer and fan pins.
+4. Displays the startup message.
+5. Waits for 2 seconds.
+6. Clears the LCD.
+
+```mermaid
+sequenceDiagram
+    participant A as 🤖 Arduino
+    participant L as 📟 LCD
+
+    A->>L: lcd.begin(16,2)
+    A->>L: "Kitchen Monitor"
+    A->>L: "System"
+    Note over A,L: ⏱️ Wait 2 seconds
+    A->>L: Clear display
+    A->>A: Start monitoring 🔄
+```
+
+---
+
+# 🔄 Loop Function
+
+The `loop()` function runs continuously.
+
+```cpp
+void loop()
+{
+    // Read sensors
+
+    // Convert sensor values
+
+    // Check danger conditions
+
+    // Control outputs
+
+    // Display status
+
+    // Wait 1 second
+}
+```
+
+The loop is the **heart of the project** ❤️.
+
+---
+
+# 🧠 Decision Table
+
+|  Gas | Fire | Temperature | Result               |
+| ---: | ---: | ----------: | -------------------- |
+| < 60 | < 50 |      < 50°C | 🟢 Safe              |
+| ≥ 60 |  Any |         Any | 🚨 Gas Leak          |
+| < 60 | ≥ 50 |         Any | 🔥 Fire Alert        |
+| < 60 | < 50 |      ≥ 50°C | 🌡️ High Temperature |
+
+> **Gas has the highest priority**, followed by fire, then temperature.
+
+---
+
+# 🛠️ Hardware Required
+
+* 🤖 Arduino UNO
+* 📟 16×2 LCD
+* 💨 Gas sensor
+* 🔥 Fire/flame sensor
+* 🌡️ DHT11 sensor
+* 🔴 Red LED
+* 🟢 Green LED
+* 🔊 Buzzer
+* 🌀 DC Fan
+* ⚡ Resistors
+* 🔌 Jumper wires
+* 🧪 Breadboard
+* 🔋 Power supply
+
+---
+
+# 🔗 Hardware Architecture
+
+```mermaid
+flowchart TB
+    P["🔋 POWER"] --> A["🤖 ARDUINO UNO"]
+
+    A --> LCD["📟 16×2 LCD"]
+    A --> GAS["💨 GAS SENSOR"]
+    A --> FIRE["🔥 FIRE SENSOR"]
+    A --> DHT["🌡️ DHT11"]
+
+    A --> RED["🔴 RED LED"]
+    A --> GREEN["🟢 GREEN LED"]
+    A --> BUZZER["🔊 BUZZER"]
+    A --> FAN["🌀 FAN"]
+
+    GAS --> A
+    FIRE --> A
+    DHT --> A
+```
+
+---
+
+# 🚨 Alert State Animation
+
+```mermaid
+stateDiagram-v2
+    [*] --> Safe
+
+    Safe --> GasLeak: 💨 Gas ≥ 60%
+    Safe --> FireAlert: 🔥 Fire ≥ 50%
+    Safe --> TempHigh: 🌡️ Temp ≥ 50°C
+
+    GasLeak --> Safe: Gas Normal
+    FireAlert --> Safe: Fire Normal
+    TempHigh --> Safe: Temperature Normal
+
+    GasLeak: 🚨 GAS LEAK
+    GasLeak: 🔴 LED + 🔊 Buzzer + 🌀 Fan
+
+    FireAlert: 🔥 FIRE ALERT
+    FireAlert: 🔴 LED + 🔊 Buzzer
+
+    TempHigh: 🌡️ HIGH TEMP
+    TempHigh: 🔴 LED + 🌀 Fan
+
+    Safe: 🟢 KITCHEN SAFE
+```
+
+---
+
+# 📈 Monitoring Pipeline
+
+```text
+             SENSOR WORLD
+                  │
+       ┌──────────┼──────────┐
+       ↓          ↓          ↓
+     💨 Gas     🔥 Fire    🌡️ Temp
+       │          │          │
+       └──────────┼──────────┘
+                  ↓
+             🤖 ARDUINO
+                  │
+                  ↓
+            🧠 PROCESSING
+                  │
+          ┌───────┼───────┐
+          ↓       ↓       ↓
+        🚨      ⚠️       ✅
+       Danger   Warning   Safe
+          │       │       │
+          ↓       ↓       ↓
+        🔴🔊🌀   🔴🌀     🟢
+          │       │       │
+          └───────┼───────┘
+                  ↓
+              📟 LCD
+```
+
+---
+
+# 🎯 Threshold Visualization
+
+```text
+💨 GAS
+0% ─────────────────────── 100%
+🟢🟢🟢🟢🟢🟢🟢🟢🟢🔴🔴🔴
+                    ▲
+                  60% 🚨
+
+
+🔥 FIRE
+0% ─────────────────────── 100%
+🟢🟢🟢🟢🟢🔴🔴🔴🔴🔴🔴🔴
+              ▲
+             50% 🚨
+
+
+🌡️ TEMPERATURE
+0°C ─────────────────────── 100°C
+🟢🟢🟢🟢🟢🟢🟢🟢🟢🔴🔴🔴
+                    ▲
+                  50°C ⚠️
+```
 
 ---
 
@@ -700,7 +900,6 @@ void loop()
     lcd.setCursor(0,1);
     lcd.print("T:");
     lcd.print(temperature);
-
     lcd.print((char)223);
     lcd.print("C");
   }
@@ -727,7 +926,6 @@ void loop()
     lcd.setCursor(11,1);
     lcd.print("T:");
     lcd.print(temperature);
-
     lcd.print((char)223);
     lcd.print("C");
   }
@@ -738,11 +936,11 @@ void loop()
 
 ---
 
-# ⚠️ Important Code Improvement
+# ⚠️ Important Code Note
 
-There is one behavior worth fixing in the original program.
+There is one small behavior to be aware of in the current code.
 
-In the **fire condition**, the code does not explicitly set the fan:
+In the **fire alert** section, the fan is not explicitly turned OFF:
 
 ```cpp
 else if (fire >= 50)
@@ -753,9 +951,9 @@ else if (fire >= 50)
 }
 ```
 
-If the fan was previously ON because of a gas alarm, it can remain ON during the fire state.
+If the previous loop had a gas alert, the fan may remain ON because the Arduino output stays in its previous state.
 
-For predictable behavior, explicitly control it:
+A safer version would explicitly control the fan in every condition:
 
 ```cpp
 else if (fire >= 50)
@@ -766,148 +964,156 @@ else if (fire >= 50)
 
     tone(BUZZER,1000);
 
-    // LCD code...
+    // LCD...
 }
 ```
 
-Alternatively, if your project requires the exhaust fan during fire detection, use:
-
-```cpp
-digitalWrite(FAN,HIGH);
-```
+Whether the fan should be ON during a fire depends on the physical design and ventilation strategy; for a real kitchen safety system, **do not rely on this prototype as a certified fire/gas safety device**.
 
 ---
 
-# 🏗️ Project Architecture
+# 🚀 Future Improvements
 
 ```mermaid
-graph TD
-
-    A["🟠 GAS SENSOR"] --> D["🧠 ARDUINO UNO"]
-    B["🔥 FIRE SENSOR"] --> D
-    C["🌡️ DHT11"] --> D
-
-    D --> E["📟 LCD"]
-    D --> F["🔴 RED LED"]
-    D --> G["🟢 GREEN LED"]
-    D --> H["🔊 BUZZER"]
-    D --> I["🌀 FAN"]
-
-    E --> J["👨‍🍳 USER"]
-    F --> J
-    G --> J
-    H --> J
+flowchart LR
+    A["Current System"] --> B["📱 Mobile App"]
+    A --> C["☁️ IoT Cloud"]
+    A --> D["📲 SMS Alert"]
+    A --> E["🚪 Automatic Gas Valve"]
+    A --> F["📈 Data Logging"]
+    A --> G["🔋 Battery Backup"]
 ```
 
----
+Possible improvements:
 
-# 🎯 Project Goals
-
-The project is designed to demonstrate:
-
-* 🔌 Sensor interfacing
-* 🧠 Arduino decision making
-* 📟 LCD communication
-* 🌡️ Temperature monitoring
-* 🔥 Fire detection
-* 🟠 Gas monitoring
-* 🔊 Alarm generation
-* 💡 LED status indication
-* 🌀 Automatic fan control
-* 🔄 Real-time monitoring
+* 📱 Add Bluetooth/mobile monitoring
+* 🌐 Add Wi-Fi/IoT connectivity
+* 📲 Send SMS alerts
+* 📊 Store sensor readings
+* 🚪 Automatically shut a gas valve
+* 🔋 Add backup battery
+* 🔔 Add different alarm patterns
+* 📟 Add scrolling LCD messages
+* 📈 Add real-time graphs
+* 🧠 Add sensor calibration
+* 🔄 Add averaging/filtering for noisy sensor readings
 
 ---
 
-# 🚀 Possible Future Improvements
-
-### 📱 1. Mobile Notification
-
-Add an ESP8266/ESP32 to send:
+# 🏆 Project Concept
 
 ```text
-🚨 GAS LEAK DETECTED!
-```
-
-to a mobile application.
-
-### ☁️ 2. IoT Dashboard
-
-Store sensor readings online:
-
-```text
-Gas       █████████░ 75%
-Fire      ███████░░░ 62%
-Temp      🌡️ 48°C
-Status    🚨 DANGER
-```
-
-### 📸 3. Camera Integration
-
-Add a camera module for visual confirmation of fire.
-
-### 🔔 4. SMS Alert
-
-Automatically send an emergency SMS when a dangerous condition is detected.
-
-### 📈 5. Data Logging
-
-Record:
-
-```text
-Time | Gas | Fire | Temp | Status
-```
-
-for later analysis.
-
----
-
-# 🛡️ Safety Note
-
-This project is intended as an **educational prototype**.
-
-The gas, fire, and temperature thresholds used in the program are simple project thresholds and should **not be treated as calibrated safety limits** for a real kitchen.
-
-For a real-world safety system, use properly certified sensors, calibrated thresholds, appropriate electrical isolation, and professionally designed safety hardware.
-
----
-
-# ⭐ Project Summary
-
-```text
-             🏠 SMART KITCHEN
-                    │
-        ┌───────────┼───────────┐
-        ↓           ↓           ↓
-      🟠 GAS       🔥 FIRE     🌡️ TEMP
-        │           │           │
-        └───────────┼───────────┘
-                    ↓
-              🧠 ARDUINO
-                    │
-       ┌────────────┼────────────┐
-       ↓            ↓            ↓
-    📟 LCD       🔊 BUZZER    💡 LEDs
-                                  │
-                                  ↓
-                               🌀 FAN
-
-              🚨 SAFETY FIRST 🚨
+        ┌───────────────────────────┐
+        │     🍳 SMART KITCHEN      │
+        │        MONITOR             │
+        └─────────────┬─────────────┘
+                      │
+          ┌───────────┼───────────┐
+          ↓           ↓           ↓
+        💨 GAS      🔥 FIRE     🌡️ TEMP
+          │           │           │
+          └───────────┼───────────┘
+                      ↓
+                🤖 ARDUINO UNO
+                      │
+                🧠 DECISION
+                      │
+          ┌───────────┼───────────┐
+          ↓           ↓           ↓
+        🔴 LED      🔊 ALARM     🌀 FAN
+                      │
+                      ↓
+                  📟 LCD
+                      │
+                      ↓
+                🛡️ SAFETY
 ```
 
 ---
 
-## ❤️ If You Like This Project
+# ⭐ Final Working Animation
 
-Give the repository a ⭐ and consider improving it with:
+```mermaid
+flowchart TD
+    START(["🔌 POWER ON"]) --> INIT["⚙️ Initialize Arduino"]
+    INIT --> LCD["📟 Kitchen Monitor<br/>System"]
+    LCD --> WAIT["⏱️ 2 Seconds"]
+    WAIT --> READ["🔍 Read Sensors"]
 
-**IoT + 📱 Mobile App + ☁️ Cloud + 📊 Dashboard + 📷 Camera**
+    READ --> GAS["💨 Gas"]
+    READ --> FIRE["🔥 Fire"]
+    READ --> TEMP["🌡️ Temperature"]
+
+    GAS --> CHECK1{"Gas ≥ 60%?"}
+
+    CHECK1 -- "🚨 YES" --> GASALERT["🚨 GAS LEAK"]
+    GASALERT --> RED1["🔴 Red LED"]
+    RED1 --> BUZZ1["🔊 Buzzer"]
+    BUZZ1 --> FAN1["🌀 Fan"]
+    FAN1 --> DISPLAY1["📟 LCD Alert"]
+
+    CHECK1 -- "NO" --> CHECK2{"Fire ≥ 50%?"}
+
+    CHECK2 -- "🚨 YES" --> FIREALERT["🔥 FIRE ALERT"]
+    FIREALERT --> RED2["🔴 Red LED"]
+    RED2 --> BUZZ2["🔊 Buzzer"]
+    BUZZ2 --> DISPLAY2["📟 LCD Alert"]
+
+    CHECK2 -- "NO" --> CHECK3{"Temperature ≥ 50°C?"}
+
+    CHECK3 -- "⚠️ YES" --> TEMPALERT["🌡️ HIGH TEMP"]
+    TEMPALERT --> RED3["🔴 Red LED"]
+    RED3 --> FAN3["🌀 Fan"]
+    FAN3 --> DISPLAY3["📟 LCD Alert"]
+
+    CHECK3 -- "NO" --> SAFE["😊 KITCHEN SAFE"]
+    SAFE --> GREEN["🟢 Green LED"]
+    GREEN --> DISPLAY4["📟 LCD Sensor Values"]
+
+    DISPLAY1 --> DELAY["⏱️ Wait 1 Second"]
+    DISPLAY2 --> DELAY
+    DISPLAY3 --> DELAY
+    DISPLAY4 --> DELAY
+
+    DELAY --> READ
+```
 
 ---
 
-### 👨‍💻 Built With
+# 👨‍💻 Project Summary
 
-`Arduino` • `C/C++` • `DHT11` • `Gas Sensor` • `Fire Sensor` • `16×2 LCD` • `Buzzer` • `LEDs` • `Fan`
+**Kitchen Safety Monitoring System** is a simple embedded safety project demonstrating how an Arduino can combine multiple sensors and output devices into a real-time monitoring system.
 
-### 🔥 Smart Kitchen Safety System
+### 🔍 Inputs
 
-> **Detect → Decide → Alert → Protect** 🚨
+**Gas + Fire + Temperature**
+
+### 🧠 Processing
+
+**Arduino UNO**
+
+### 📢 Outputs
+
+**LCD + LEDs + Buzzer + Fan**
+
+### 🔄 Operation
+
+**Continuous real-time monitoring**
+
+---
+
+<p align="center">
+
+## 🍳💨🔥🌡️ → 🤖 → 🧠 → 🚨🛡️
+
+### **Monitor • Detect • Alert • Protect**
+
+</p>
+
+---
+
+<p align="center">
+
+⭐ **If you like this project, consider giving the repository a star!** ⭐
+
+</p>
